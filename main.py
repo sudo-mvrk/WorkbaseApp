@@ -116,8 +116,6 @@ class MainWindow(QMainWindow):
 
         self.addToolBar(toolbar)
 
-        # --- Таблица ---
-        # self.table = QTableWidget(0, 4)
         self.table = DragDropTableWidget(0, 4, load_callback=self.load_file_path)
         self.table.setHorizontalHeaderLabels([
             "Название макета",
@@ -134,7 +132,6 @@ class MainWindow(QMainWindow):
         layout.addWidget(self.table)
 
 
-        # --- Нижняя панель с кнопками и общей суммой ---
         bottom = QHBoxLayout()
         layout.addLayout(bottom)
 
@@ -164,15 +161,10 @@ class MainWindow(QMainWindow):
         bottom.addWidget(lbl_total)
         bottom.addWidget(self.total_edit)
 
-        # Сигналы
         self.table.cellChanged.connect(self.on_cell_changed)
 
-        # Стартовая строка
         self.add_row()
 
-    # --------------------------
-    # Логика таблицы
-    # --------------------------
     def add_row(self, name="", price=0.0, qty=0):
         row = self.table.rowCount()
         self.table.insertRow(row)
@@ -193,7 +185,6 @@ class MainWindow(QMainWindow):
         item_total.setFlags(Qt.ItemFlag.ItemIsSelectable | Qt.ItemFlag.ItemIsEnabled)
         self.table.setItem(row, 3, item_total)
 
-        # self.table.resizeRowToContents(row)
         self.update_overall_sum()
 
     def remove_selected_rows(self):
@@ -226,7 +217,6 @@ class MainWindow(QMainWindow):
         total_item.setText(f"{total:.2f}")
         self.table.blockSignals(False)
 
-        # self.table.resizeRowToContents(row)
         self.update_overall_sum()
 
     def update_overall_sum(self):
@@ -237,18 +227,9 @@ class MainWindow(QMainWindow):
             total_sum += price * qty
         self.total_edit.setText(f"{total_sum:.2f}")
 
-    # --------------------------
-    # Сохранение / загрузка / отчёт
-    # --------------------------
     def save_to_file(self, force_dialog=False):
-        """
-        Сохраняет данные таблицы:
-        - если путь уже есть (self.current_file) и force_dialog=False — сохраняет поверх;
-        - если пути нет, путь указывает на .xml или force_dialog=True — открывает диалог 'Сохранить как...'.
-        """
         fn = self.current_file
 
-        # если путь не задан, явно запрошен диалог или расширение .xml — открываем диалог сохранения
         if not fn or fn.lower().endswith(".xml") or force_dialog:
             default_dir = str(Path(fn).parent) if fn else str(Path.home())
             default_name = (
@@ -269,7 +250,6 @@ class MainWindow(QMainWindow):
             self.current_file = fn
             self.setWindowTitle(f"Layouts - {Path(fn).name}")
 
-        # сбор данных из таблицы
         data = []
         for r in range(self.table.rowCount()):
             name = self.table.item(r, 0).text() if self.table.item(r, 0) else ""
@@ -277,7 +257,6 @@ class MainWindow(QMainWindow):
             qty = int(parse_number(self.table.item(r, 2).text() if self.table.item(r, 2) else "0"))
             data.append({"name": name, "price": price, "qty": qty})
 
-        # сохранение
         try:
             with open(self.current_file, "w", encoding="utf-8") as f:
                 json.dump(data, f, ensure_ascii=False, indent=2)
@@ -402,7 +381,6 @@ class MainWindow(QMainWindow):
             lines.append(
                 f"{'Общая сумма:':>{WIDTH_NAME + WIDTH_PRICE + WIDTH_QTY + 3}} {total_sum:>{WIDTH_SUBTOTAL}.2f}")
 
-            # Сохраняем файл
             with open(fn, "w", encoding="utf-8") as f:
                 f.write("\n".join(lines))
 
@@ -434,18 +412,15 @@ class MainWindow(QMainWindow):
         ws = wb.active
         ws.title = "Отчёт макетов"
 
-        # Заголовки
         headers = ["Название макета", "Стоимость за штуку", "Кол-во", "Итого"]
         ws.append(headers)
 
-        # Жирный шрифт для заголовка
         for col, header in enumerate(headers, 1):
             ws.cell(row=1, column=col).font = Font(bold=True)
             ws.cell(row=1, column=col).alignment = Alignment(horizontal="center")
 
         total_sum = 0.0
 
-        # Данные из таблицы
         for r in range(self.table.rowCount()):
             name = self.table.item(r, 0).text() if self.table.item(r, 0) else ""
             price = float(parse_number(self.table.item(r, 1).text() if self.table.item(r, 1) else "0"))
@@ -456,19 +431,16 @@ class MainWindow(QMainWindow):
             row_data = [name, price, qty, subtotal]
             ws.append(row_data)
 
-            # Выравнивание: текст влево, числа вправо
             ws.cell(row=r + 2, column=1).alignment = Alignment(horizontal="left")
             for c in range(2, 5):
                 ws.cell(row=r + 2, column=c).alignment = Alignment(horizontal="right")
 
-        # Итоговая сумма внизу
         ws.append(["", "", "Общая сумма:", total_sum])
         ws.cell(row=self.table.rowCount() + 2, column=3).alignment = Alignment(horizontal="right")
         ws.cell(row=self.table.rowCount() + 2, column=4).alignment = Alignment(horizontal="right")
         ws.cell(row=self.table.rowCount() + 2, column=3).font = Font(bold=True)
         ws.cell(row=self.table.rowCount() + 2, column=4).font = Font(bold=True)
 
-        # Автоширина колонок
         for col in ws.columns:
             max_length = 0
             column = col[0].column_letter
