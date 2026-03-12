@@ -32,12 +32,13 @@ Originally a monolithic script, this project has been heavily refactored into a 
    git clone [https://github.com/sudo-mvrk/WorkbaseApp](https://github.com/sudo-mvrk/WorkbaseApp)
    cd WorkbaseApp
    ```
-2.Install dependencies using Poetry:
-  ```bash
-  poetry install
-  ```
+2. Install dependencies using Poetry:
+   ```bash
+   poetry install
+   ```
 3. Run the application:
-  ```bash
-  poetry run python main.py
-```
+   ```bash
+   poetry run python main.py
+   ```
+
 
